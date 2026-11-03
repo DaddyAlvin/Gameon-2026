@@ -1,12 +1,8 @@
 import { SuperClass } from "./superclass.js";
 
 export class Player extends SuperClass {
-  constructor(x, y, speed = 4) {
-    // need super first before this or error happens
-    super(800, Math.PI / 4, 0, "");
-
-    this.x = x;
-    this.y = y;
+  constructor(x, y, width, height, range, fov, direction, img, speed = 4) {
+    super(x, y, width, height, range, fov, direction, img);
     this.speed = speed;
     this.angle = 0;
 
@@ -62,6 +58,31 @@ export class Player extends SuperClass {
     }
 
     return false;
+  }
+
+  // detectCollision
+  detectCollision(entityList) {
+    entityList.forEach(other => {
+      if (other === this) return;
+
+      if (this.intersects(other)) {
+        // Simple circle vs circle / box push-back resolution
+        const dx = this.x - other.x;
+        const dy = this.y - other.y;
+        const distance = Math.hypot(dx, dy);
+        const minDist = this.radius + (other.radius || 15);
+
+        if (distance < minDist && distance > 0) {
+          // Calculate how much they are overlapping
+          const overlap = minDist - distance;
+          
+          // Push player away from the other entity along the collision angle
+          const angle = Math.atan2(dy, dx);
+          this.x += Math.cos(angle) * overlap;
+          this.y += Math.sin(angle) * overlap;
+        }
+      }
+    });
   }
 
   update(input) {
