@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Planritning 3 - 1920x1080 Canvas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            background-color: #0d0d0d;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .canvas-wrapper {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 10px;
+        }
+
+        canvas {
+            background-color: #e5e7eb;
+            max-width: 100%;
+            max-height: 100%;
+            aspect-ratio: 1920 / 1080;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8);
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="canvas-wrapper">
+        <canvas id="floorPlanCanvas" width="1920" height="1080"></canvas>
+    </div>
+
+    <script>
+        window.onload = function() {
+            const canvas = document.getElementById('floorPlanCanvas');
+            const ctx = canvas.getContext('2d');
+
+            // Koordinater nedan är angivna i skissens (referensbildens) enheter
+            // och räknas om till canvas (1920x1080) med sx/sy/sl.
+            // Skissen är mycket bredare än hög, så den centreras vertikalt.
+            const SCALE = 1.44;
+            const sx = (x) => 40 + (x - 7) * SCALE;
+            const sy = (y) => 281 + (y - 20) * SCALE;
+            const sl = (l) => l * SCALE;
+
+            // Hjälpare: rektangel från skiss-koordinater (x1,y1) till (x2,y2)
+            function rect(x1, y1, x2, y2) {
+                ctx.fillRect(sx(x1), sy(y1), sl(x2 - x1), sl(y2 - y1));
+            }
+
+            // ------------------------------------------------------------
+            // OBJEKT - fyllda med svart nu. Byt ut genom att sätta `img`
+            // till en Image() så ritas bilden istället för den svarta rutan.
+            // (fill: "#ffffff" = vita placeholders som i skissen)
+            // ------------------------------------------------------------
+            const objects = [
+                { name: "STORT OMRÅDE (övre höger)",  x1: 570, y1: 20,  x2: 1112, y2: 158, shape: "rect", img: null },
+                { name: "TOPP-BLOCK",                  x1: 410, y1: 20,  x2: 570,  y2: 52,  shape: "rect", img: null },
+                { name: "STORT BORD",                  x1: 672, y1: 297, x2: 813,  y2: 347, shape: "rect", img: null },
+                { name: "LÅG HYLLA (nere)",            x1: 672, y1: 360, x2: 845,  y2: 377, shape: "rect", img: null },
+                { name: "TJOCK VÄGGDEL / HYLLA",       x1: 822, y1: 260, x2: 845,  y2: 377, shape: "rect", img: null },
+                { name: "RUNT OBJEKT 1",               cx: 559, cy: 357, rx: 12, ry: 11,     shape: "ellipse", img: null },
+                { name: "RUNT OBJEKT 2",               cx: 594, cy: 357, rx: 12, ry: 11,     shape: "ellipse", img: null },
+                { name: "RUNT OBJEKT 3",               cx: 631, cy: 357, rx: 12, ry: 11,     shape: "ellipse", img: null },
+                { name: "HANDFAT 1",                   cx: 430, cy: 61,  rx: 6,  ry: 8,      shape: "ellipse", fill: "#ffffff", img: null },
+                { name: "HANDFAT 2",                   cx: 454, cy: 61,  rx: 6,  ry: 8,      shape: "ellipse", fill: "#ffffff", img: null },
+                { name: "HANDFAT 3",                   cx: 478, cy: 61,  rx: 6,  ry: 8,      shape: "ellipse", fill: "#ffffff", img: null },
+                { name: "HANDFAT 4",                   cx: 498, cy: 61,  rx: 6,  ry: 8,      shape: "ellipse", fill: "#ffffff", img: null }
+            ];
+
+            function draw() {
+                // Golvyta
+                ctx.fillStyle = "#d4d4d4";
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                drawSolidWalls();
+                drawObjects();
+                drawDoors();
+                drawExitAndEntrance();
+                drawGuardsAndPaths();
+                drawLabels();
+            }
+
+            function drawSolidWalls() {
+                ctx.fillStyle = "#000000";
+
+                // --- Yttre ram ---
+                rect(7, 19, 1177, 23);         // Övre vägg (vänster om Entrance)
+                rect(1233, 19, 1283, 23);      // Övre vägg (höger om Entrance)
+                rect(7, 375, 463, 379);        // Nedre vägg (vänster om EXIT)
+                rect(538, 375, 1283, 379);     // Nedre vägg (höger om EXIT)
+                rect(7, 19, 11, 379);          // Vänster vägg
+                rect(1279, 19, 1283, 379);     // Höger vägg
+
+                // --- Vägg mot högra kolumnen (öppningar för två dörrar) ---
+                rect(1108, 23, 1112, 183);
+                rect(1108, 208, 1112, 312);
+
+                // --- Övre vänstra rummet ---
+                rect(109, 23, 113, 124);       // Vänster vägg
+                rect(109, 120, 138, 124);      // Nedre vägg (öppning 138-200)
+                rect(200, 120, 537, 124);      // Nedre vägg mot korridor (dörr 537-559)
+                rect(559, 120, 570, 124);
+
+                // --- Toaletter ---
+                rect(264, 49, 389, 53);        // Övre vägg (dörr 389-403)
+                rect(403, 49, 410, 53);
+                rect(264, 49, 268, 124);       // Vänster vägg
+                rect(327, 49, 331, 60);        // Höger vägg (ovanför toa-dörr)
+                rect(327, 76, 331, 124);       // Höger vägg (under toa-dörr)
+                rect(264, 85, 331, 89);        // Mellanvägg
+
+                // --- Nedre vänstra rummet ---
+                rect(80, 180, 363, 184);       // Övre vägg (dörr till vänster 11-80)
+                rect(359, 180, 363, 379);      // Höger vägg
+
+                // --- Nedre högra rummet ---
+                rect(843, 238, 864, 242);      // Övre vägg (dörr 864-880)
+                rect(880, 238, 1112, 242);
+                rect(843, 238, 847, 262);      // Koppling mot svart vägg
+            }
+
+            function drawDoors() {
+                ctx.save();
+                ctx.strokeStyle = "#000000";
+                ctx.lineWidth = 2;
+
+                const vLines = (xs, y1, y2) => xs.forEach(x => {
+                    ctx.beginPath();
+                    ctx.moveTo(sx(x), sy(y1));
+                    ctx.lineTo(sx(x), sy(y2));
+                    ctx.stroke();
+                });
+                const hLines = (ys, x1, x2) => ys.forEach(y => {
+                    ctx.beginPath();
+                    ctx.moveTo(sx(x1), sy(y));
+                    ctx.lineTo(sx(x2), sy(y));
+                    ctx.stroke();
+                });
+
+                vLines([389, 403], 38, 68);        // Dörr ovanför toan (öppnas av knappen)
+                vLines([537, 559], 110, 140);      // Dörr övre vänstra rummet -> korridor
+                vLines([31, 54], 170, 200);        // Dörr nedre vänstra rummet (vänster)
+                vLines([488, 514], 357, 395);      // EXIT-dörr i nedre väggen
+                vLines([864, 880], 228, 252);      // Dörr nedre högra rummet
+                vLines([1199, 1214], 20, 48);      // Entrance-dörr i övre väggen
+                hLines([183, 208], 1092, 1128);    // Dörr mot högra kolumnen (övre)
+                hLines([329, 357], 1092, 1128);    // Dörr mot högra kolumnen (nedre)
+                hLines([60, 76], 320, 338);        // Dörr in till toa (clue) från handfatssidan
+
+                // --- Trösklar (tunna linjer i dörröppningarna) ---
+                ctx.lineWidth = 1.5;
+                hLines([182], 11, 80);             // Vänster dörr, nedre vänstra rummet
+                hLines([240], 843, 897);           // Dörr nedre högra rummet
+                hLines([122], 537, 559);           // Dörr övre vänstra rummet -> korridor
+                hLines([51], 389, 403);            // Dörren som knappen öppnar
+                vLines([329], 60, 76);             // Tröskel toa (clue)
+                hLines([377], 463, 538);           // EXIT-dörr
+                hLines([21], 1177, 1233);          // Entrance-dörr
+                vLines([1110], 158, 183);          // Dörr mot högra kolumnen (övre)
+                vLines([1110], 208, 312);
+                vLines([1110], 312, 377);          // Dörr mot högra kolumnen (nedre)
+
+                ctx.restore();
+            }
+
+            function drawExitAndEntrance() {
+                // --- ENTRANCE (övre höger) ---
+                const ex1 = sx(1177), ex2 = sx(1233);
+                ctx.fillStyle = "#3b82f6";
+                ctx.fillRect(ex1, sy(19) + 2, ex2 - ex1, 8);
+
+                ctx.fillStyle = "#1d4ed8";
+                ctx.font = "bold 22px sans-serif";
+                ctx.textAlign = "center";
+                ctx.textBaseline = "bottom";
+                ctx.fillText("Entrance", (ex1 + ex2) / 2, sy(19) - 6);
+
+                // --- EXIT (nedre mitten) ---
+                const xx1 = sx(463), xx2 = sx(538);
+                ctx.fillStyle = "#22c55e";
+                ctx.fillRect(xx1, sy(379) - 10, xx2 - xx1, 8);
+
+                ctx.fillStyle = "#15803d";
+                ctx.font = "bold 22px sans-serif";
+                ctx.textAlign = "center";
+                ctx.textBaseline = "top";
+                ctx.fillText("EXIT", (xx1 + xx2) / 2, sy(395) + 6);
+            }
+
+            function drawObjects() {
+                objects.forEach(o => {
+                    ctx.save();
+                    if (o.shape === "ellipse") {
+                        const cx = sx(o.cx), cy = sy(o.cy), rx = sl(o.rx), ry = sl(o.ry);
+                        if (o.img) {
+                            ctx.drawImage(o.img, cx - rx, cy - ry, rx * 2, ry * 2);
+                        } else {
+                            ctx.fillStyle = o.fill || "#000000";
+                            ctx.beginPath();
+                            ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
+                            ctx.fill();
+                            if (o.fill) {
+                                ctx.strokeStyle = "#475569";
+                                ctx.lineWidth = 1;
+                                ctx.stroke();
+                            }
+                        }
+                    } else {
+                        const x = sx(o.x1), y = sy(o.y1);
+                        const w = sl(o.x2 - o.x1), h = sl(o.y2 - o.y1);
+                        if (o.img) {
+                            ctx.drawImage(o.img, x, y, w, h);
+                        } else {
+                            ctx.fillStyle = o.fill || "#000000";
+                            ctx.fillRect(x, y, w, h);
+                        }
+                    }
+                    ctx.restore();
+                });
+            }
+
+            function drawGuardsAndPaths() {
+                // Rörelsepilar
+                drawArrow(sx(327), sy(152), sx(369), sy(152));
+                drawArrow(sx(945), sy(200), sx(996), sy(200));
+
+                // Vakter (placeholder badges)
+                drawBadge(sx(306), sy(153), "VAKT", "#2563eb", "#ffffff");
+                drawBadge(sx(918), sy(199), "VAKT", "#2563eb", "#ffffff");
+            }
+
+            function drawArrow(x1, y1, x2, y2) {
+                ctx.save();
+                ctx.strokeStyle = "#000000";
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(x2, y2);
+                ctx.stroke();
+
+                const a = Math.atan2(y2 - y1, x2 - x1);
+                ctx.beginPath();
+                ctx.moveTo(x2, y2);
+                ctx.lineTo(x2 - 9 * Math.cos(a - 0.4), y2 - 9 * Math.sin(a - 0.4));
+                ctx.moveTo(x2, y2);
+                ctx.lineTo(x2 - 9 * Math.cos(a + 0.4), y2 - 9 * Math.sin(a + 0.4));
+                ctx.stroke();
+                ctx.restore();
+            }
+
+            function drawLabels() {
+                ctx.save();
+                ctx.fillStyle = "#0f172a";
+                ctx.font = "bold 14px sans-serif";
+                ctx.textAlign = "left";
+                ctx.textBaseline = "middle";
+
+                // Toalettetiketter
+                ctx.fillText("Toa (clue)", sx(275), sy(70));
+                ctx.fillText("Toa Låst",   sx(275), sy(102));
+
+                // Små vita markörer vid toaletterna
+                ctx.fillStyle = "#ffffff";
+                [70, 102].forEach(y => {
+                    ctx.beginPath();
+                    ctx.arc(sx(277), sy(y), 4, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+                ctx.restore();
+
+                // Knapp under handfatet (öppnar dörren ovanför toan)
+                ctx.save();
+                ctx.fillStyle = "#ef4444";
+                ctx.strokeStyle = "#7f1d1d";
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(sx(454), sy(88), 9, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+                ctx.fillStyle = "#0f172a";
+                ctx.font = "bold 13px sans-serif";
+                ctx.textAlign = "center";
+                ctx.textBaseline = "top";
+                ctx.fillText("Knapp (interactable)", sx(454), sy(88) + 14);
+
+                // Dörren som knappen öppnar (övre väggen)
+                ctx.strokeStyle = "#ef4444";
+                ctx.lineWidth = 4;
+                ctx.beginPath();
+                ctx.moveTo(sx(389), sy(51));
+                ctx.lineTo(sx(403), sy(51));
+                ctx.stroke();
+                ctx.restore();
+            }
+
+            function drawBadge(x, y, label, strokeColor, fillColor, fontSize = 13) {
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(x, y, 30, 0, Math.PI * 2);
+                ctx.fillStyle = fillColor;
+                ctx.fill();
+
+                ctx.strokeStyle = strokeColor;
+                ctx.lineWidth = 3;
+                ctx.stroke();
+
+                if (label) {
+                    ctx.fillStyle = "#0f172a";
+                    ctx.font = `bold ${fontSize}px sans-serif`;
+                    ctx.textAlign = "center";
+                    ctx.textBaseline = "middle";
+                    ctx.fillText(label, x, y);
+                }
+                ctx.restore();
+            }
+
+            // Rendera ritningen
+            draw();
+        };
+    </script>
+</body>
+</html>
