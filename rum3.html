@@ -36,7 +36,7 @@
             background-color: #e5e7eb;
             max-width: 100%;
             max-height: 100%;
-            aspect-ratio: 1920 / 1080;
+            aspect-ratio: 3920 / 1280;
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8);
             border-radius: 4px;
         }
@@ -45,7 +45,7 @@
 <body>
 
     <div class="canvas-wrapper">
-        <canvas id="floorPlanCanvas" width="1920" height="1080"></canvas>
+        <canvas id="floorPlanCanvas" width="3920" height="1280"></canvas>
     </div>
 
     <script>
@@ -54,11 +54,11 @@
             const ctx = canvas.getContext('2d');
 
             // Koordinater nedan är angivna i skissens (referensbildens) enheter
-            // och räknas om till canvas (1920x1080) med sx/sy/sl.
-            // Skissen är mycket bredare än hög, så den centreras vertikalt.
-            const SCALE = 1.44;
+            // och räknas om till canvas (3920x1280) med sx/sy/sl.
+            // Rum 3 är mycket brett, så canvasen är större än i de andra rummen.
+            const SCALE = 3.0;
             const sx = (x) => 40 + (x - 7) * SCALE;
-            const sy = (y) => 281 + (y - 20) * SCALE;
+            const sy = (y) => 70 + (y - 20) * SCALE;
             const sl = (l) => l * SCALE;
 
             // Hjälpare: rektangel från skiss-koordinater (x1,y1) till (x2,y2)
@@ -141,7 +141,7 @@
             function drawDoors() {
                 ctx.save();
                 ctx.strokeStyle = "#000000";
-                ctx.lineWidth = 2;
+                ctx.lineWidth = 4;
 
                 const vLines = (xs, y1, y2) => xs.forEach(x => {
                     ctx.beginPath();
@@ -167,7 +167,7 @@
                 hLines([60, 76], 320, 338);        // Dörr in till toa (clue) från handfatssidan
 
                 // --- Trösklar (tunna linjer i dörröppningarna) ---
-                ctx.lineWidth = 1.5;
+                ctx.lineWidth = 3.0;
                 hLines([182], 11, 80);             // Vänster dörr, nedre vänstra rummet
                 hLines([240], 843, 897);           // Dörr nedre högra rummet
                 hLines([122], 537, 559);           // Dörr övre vänstra rummet -> korridor
@@ -186,24 +186,24 @@
                 // --- ENTRANCE (övre höger) ---
                 const ex1 = sx(1177), ex2 = sx(1233);
                 ctx.fillStyle = "#3b82f6";
-                ctx.fillRect(ex1, sy(19) + 2, ex2 - ex1, 8);
+                ctx.fillRect(ex1, sy(19) + 4, ex2 - ex1, 16);
 
                 ctx.fillStyle = "#1d4ed8";
-                ctx.font = "bold 22px sans-serif";
+                ctx.font = "bold 44px sans-serif";
                 ctx.textAlign = "center";
                 ctx.textBaseline = "bottom";
-                ctx.fillText("Entrance", (ex1 + ex2) / 2, sy(19) - 6);
+                ctx.fillText("Entrance", (ex1 + ex2) / 2, sy(19) - 12);
 
                 // --- EXIT (nedre mitten) ---
                 const xx1 = sx(463), xx2 = sx(538);
                 ctx.fillStyle = "#22c55e";
-                ctx.fillRect(xx1, sy(379) - 10, xx2 - xx1, 8);
+                ctx.fillRect(xx1, sy(379) - 20, xx2 - xx1, 16);
 
                 ctx.fillStyle = "#15803d";
-                ctx.font = "bold 22px sans-serif";
+                ctx.font = "bold 44px sans-serif";
                 ctx.textAlign = "center";
                 ctx.textBaseline = "top";
-                ctx.fillText("EXIT", (xx1 + xx2) / 2, sy(395) + 6);
+                ctx.fillText("EXIT", (xx1 + xx2) / 2, sy(395) + 12);
             }
 
             function drawObjects() {
@@ -220,7 +220,7 @@
                             ctx.fill();
                             if (o.fill) {
                                 ctx.strokeStyle = "#475569";
-                                ctx.lineWidth = 1;
+                                ctx.lineWidth = 2;
                                 ctx.stroke();
                             }
                         }
@@ -251,7 +251,7 @@
             function drawArrow(x1, y1, x2, y2) {
                 ctx.save();
                 ctx.strokeStyle = "#000000";
-                ctx.lineWidth = 1.5;
+                ctx.lineWidth = 3.0;
                 ctx.beginPath();
                 ctx.moveTo(x1, y1);
                 ctx.lineTo(x2, y2);
@@ -260,9 +260,9 @@
                 const a = Math.atan2(y2 - y1, x2 - x1);
                 ctx.beginPath();
                 ctx.moveTo(x2, y2);
-                ctx.lineTo(x2 - 9 * Math.cos(a - 0.4), y2 - 9 * Math.sin(a - 0.4));
+                ctx.lineTo(x2 - 18 * Math.cos(a - 0.4), y2 - 18 * Math.sin(a - 0.4));
                 ctx.moveTo(x2, y2);
-                ctx.lineTo(x2 - 9 * Math.cos(a + 0.4), y2 - 9 * Math.sin(a + 0.4));
+                ctx.lineTo(x2 - 18 * Math.cos(a + 0.4), y2 - 18 * Math.sin(a + 0.4));
                 ctx.stroke();
                 ctx.restore();
             }
@@ -270,7 +270,7 @@
             function drawLabels() {
                 ctx.save();
                 ctx.fillStyle = "#0f172a";
-                ctx.font = "bold 14px sans-serif";
+                ctx.font = "bold 28px sans-serif";
                 ctx.textAlign = "left";
                 ctx.textBaseline = "middle";
 
@@ -282,7 +282,7 @@
                 ctx.fillStyle = "#ffffff";
                 [70, 102].forEach(y => {
                     ctx.beginPath();
-                    ctx.arc(sx(277), sy(y), 4, 0, Math.PI * 2);
+                    ctx.arc(sx(277), sy(y), 8, 0, Math.PI * 2);
                     ctx.fill();
                 });
                 ctx.restore();
@@ -291,20 +291,20 @@
                 ctx.save();
                 ctx.fillStyle = "#ef4444";
                 ctx.strokeStyle = "#7f1d1d";
-                ctx.lineWidth = 2;
+                ctx.lineWidth = 4;
                 ctx.beginPath();
-                ctx.arc(sx(454), sy(88), 9, 0, Math.PI * 2);
+                ctx.arc(sx(454), sy(88), 18, 0, Math.PI * 2);
                 ctx.fill();
                 ctx.stroke();
                 ctx.fillStyle = "#0f172a";
-                ctx.font = "bold 13px sans-serif";
+                ctx.font = "bold 26px sans-serif";
                 ctx.textAlign = "center";
                 ctx.textBaseline = "top";
-                ctx.fillText("Knapp (interactable)", sx(454), sy(88) + 14);
+                ctx.fillText("Knapp (interactable)", sx(454), sy(88) + 28);
 
                 // Dörren som knappen öppnar (övre väggen)
                 ctx.strokeStyle = "#ef4444";
-                ctx.lineWidth = 4;
+                ctx.lineWidth = 8;
                 ctx.beginPath();
                 ctx.moveTo(sx(389), sy(51));
                 ctx.lineTo(sx(403), sy(51));
@@ -312,15 +312,15 @@
                 ctx.restore();
             }
 
-            function drawBadge(x, y, label, strokeColor, fillColor, fontSize = 13) {
+            function drawBadge(x, y, label, strokeColor, fillColor, fontSize = 26) {
                 ctx.save();
                 ctx.beginPath();
-                ctx.arc(x, y, 30, 0, Math.PI * 2);
+                ctx.arc(x, y, 62, 0, Math.PI * 2);
                 ctx.fillStyle = fillColor;
                 ctx.fill();
 
                 ctx.strokeStyle = strokeColor;
-                ctx.lineWidth = 3;
+                ctx.lineWidth = 6;
                 ctx.stroke();
 
                 if (label) {
