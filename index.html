@@ -1,15 +1,31 @@
+//testing for 
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-    <link rel="stylesheet" href="style.css">
-    <script type="module" src="gameloop.js" defer />
+  <meta charset="UTF-8">
+  <title>Game Test</title>
+  <style>
+    body {
+      margin: 0;
+      background: #111;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      overflow: hidden;
+    }
+    canvas {
+      background: #222;
+      border: 1px solid #444;
+      image-rendering: pixelated; 
+    }
+  </style>
 </head>
 <body>
-    <canvas id="htmlCanvas">
-    
-    </canvas>
+  <canvas id="gameCanvas" width="800" height="600"></canvas>
+
+<script src="game/entity/InputHandler.js"></script>
+  <script src="game/entity/player.js"></script>
+  <script src="game/gameloop.js"></script>
 </body>
 </html>
