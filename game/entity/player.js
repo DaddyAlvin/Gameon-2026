@@ -1,14 +1,8 @@
-import { SuperClass } from "./superclass";
+import { SuperClass } from "./superclass.js";
 
 export class Player extends SuperClass {
-  constructor(x, y, speed = 4) {
-    //need super first before this or error happens
-    super(800, Math.PI / 4, 0, "");
-
-    this.x = x;
-    this.y = y;
-    this.width = width;
-    this.height = height;
+  constructor(x, y, width, height, speed = 4, img) {
+    super(x, y, width, height, img);
     this.speed = speed;
     this.angle = 0;
 
