@@ -3,6 +3,7 @@ import { Player } from "./entity/player.js";
 import { Enemy } from "./entity/enemy.js";
 import { Camera } from "./camera.js";
 import { entityList, cameraMan } from "./objlist.js";
+import { InputHandler } from "./entity/InputHandler.js";
 
 let state = "menu";
 
@@ -10,6 +11,7 @@ function changeState(newState) {
     state = newState;
 }
 
+const input = new InputHandler(document.querySelector("canvas"));
 
 
 
@@ -24,7 +26,7 @@ document.addEventListener('keydown', function(event) {
 
 // Skapa din meny-knapp en gång
 const startBtn = document.createElement("button");
-startBtn.style.backgroundImage = "url('start.png')";
+startBtn.style.backgroundImage = "./images/start.png";
 startBtn.style.position = "absolute";
 startBtn.style.top = "50%";
 startBtn.style.left = "50%";
@@ -82,14 +84,17 @@ function update() {
         }
 
 
+        ctx.fillStyle = "white";
+        ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+        
         let player = entityList[0];
         cameraMan.follow(player);
 
         // Draw characters
         entityList.forEach(e => {
+            e.update(input);
+            e.detectCollision(entityList); 
             e.draw(ctx, cameraMan);
-            e.detectCollision(entityList);
-            e.update();
         });
     }
     else if (state === "gameover") {
