@@ -1,8 +1,9 @@
+
 import { Canvas, ctx } from "./canvas.js";
 import { Player } from "./entity/player.js";
 import { Enemy } from "./entity/enemy.js";
 import { Camera } from "./camera.js";
-import { entityList, cameraMan } from "./objlist.js";
+import { entityList, cameraMan, visionBlockers } from "./objlist.js";
 import { InputHandler } from "./entity/InputHandler.js";
 
 let state = "menu";
@@ -13,6 +14,15 @@ function changeState(newState) {
 
 const input = new InputHandler(document.querySelector("canvas"));
 
+function resizeCanvas() {
+    Canvas.width = window.innerWidth;
+    Canvas.height = window.innerHeight;
+    cameraMan.width = Canvas.width;
+    cameraMan.height = Canvas.height;
+}
+
+resizeCanvas();
+window.addEventListener("resize", resizeCanvas);
 
 
 document.addEventListener('keydown', function(event) {
@@ -35,6 +45,11 @@ startBtn.style.transform = "translate(-50%, -50%)";
 startBtn.addEventListener("click", () => {
     if (state === "menu") {
         changeState("playing");
+        if (document.fullscreenEnabled && !document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch(error => {
+                console.error("Could not enter fullscreen mode:", error);
+            });
+        }
     }
 });
 
@@ -50,7 +65,6 @@ resumeBtn.addEventListener("click", () => {
     }
 });
 
-
 const menuOverlay = document.createElement("div");
 menuOverlay.style.position = "fixed";
 menuOverlay.style.top = "0";
@@ -65,10 +79,7 @@ function update() {
         if (!document.body.contains(startBtn)) {
             document.body.appendChild(startBtn);
         }
-        if (document.documentElement.requestFullscreen) {
-            document.documentElement.requestFullscreen();
-        }
-        
+
         // Här kan du ha logik för menyn om det behövs
     } 
     else if (state === "playing") {
@@ -90,12 +101,19 @@ function update() {
         let player = entityList[0];
         cameraMan.follow(player);
 
+        const blockers = [
+            ...visionBlockers,
+            ...entityList.filter(entity => entity.blocksVision)
+        ];
+
         // Draw characters
         entityList.forEach(e => {
             e.update(input);
             e.detectCollision(entityList); 
             e.draw(ctx, cameraMan);
         });
+
+        player.vissionCone(ctx, cameraMan, player.angle, blockers, entityList);
     }
     else if (state === "gameover") {
         // Här kan du ha logik för game over-skärmen om det behövs
@@ -122,3 +140,4 @@ function gameLoop() {
 
 // Starta loopen
 gameLoop();
+

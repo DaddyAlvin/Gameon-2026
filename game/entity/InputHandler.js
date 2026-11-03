@@ -28,8 +28,8 @@ export class InputHandler {
     window.addEventListener('mousemove', (e) => {
       const rect = canvas.getBoundingClientRect();
       // screen space to canvas space conversion
-      this.mouse.x = e.clientX - rect.left;
-      this.mouse.y = e.clientY - rect.top;
+      this.mouse.x = (e.clientX - rect.left) * (canvas.width / rect.width);
+      this.mouse.y = (e.clientY - rect.top) * (canvas.height / rect.height);
     });
   }
 
