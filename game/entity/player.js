@@ -125,9 +125,9 @@ export class Player extends SuperClass {
     this.y += vy;
   }
 
-draw(ctx) {
+draw(ctx, camera = null) {
     ctx.save();
-    ctx.translate(this.x, this.y);
+    ctx.translate(this.x - (camera?.x ?? 0), this.y - (camera?.y ?? 0));
 
     // Keep rotation matching your sprite
     ctx.rotate(this.angle + Math.PI / 2);
