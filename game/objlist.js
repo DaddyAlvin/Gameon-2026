@@ -1,5 +1,11 @@
 import { Player } from "./entity/player.js";
+import { Enemy } from "./entity/enemy.js";
+import { Camera } from "./camera.js";
 
-//player instance
-export const player = new Player(400, 300);
+//Camera follow player instance
+export const cameraMan = new Camera(0, 0, 800, 600);
 
+export const entityList = [
+    new Player(50, 50, 50, 50, 100, Math.PI, 0, "./images/basechar.png"),
+    new Enemy(50, 50, 50, 50, 100, Math.PI, 0, "./images/basechar.png")
+]

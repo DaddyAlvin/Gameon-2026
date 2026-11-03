@@ -1,13 +1,9 @@
-import { SuperClass } from "./superclass";
+import { SuperClass } from "./superclass.js";
 
 export class Enemy extends SuperClass {
     // Om waypoints är tom [] så står fienden helt stilla
-    constructor(floor = 0, waypoints = [], facing = 0) {
-        super(x, y, width, height)
-        this.x = x;
-        this.y = y;
-        this.width = width;
-        this.height = height;
+    constructor(x, y, width, height, range, fov, direction, img, floor = 0, waypoints = [], facing = 0) {
+        super(x, y, width, height, range, fov, direction, img);
         this.floor = floor;
         this.facing = facing; // Vinkel i radianer (0 = höger)
 
@@ -23,6 +19,62 @@ export class Enemy extends SuperClass {
 
         this.isCaught = false;
     }
+
+    // Returns box/circle size for the enemy
+    getBounds() {
+        return {
+            x: this.x - this.width / 2,
+            y: this.y - this.height / 2,
+            width: this.width,
+            height: this.height,
+            radius: this.radius
+        };
+    }
+
+    // Enemy-specific intersection check
+    intersects(other) {
+        if (other.radius !== undefined) {
+            const dx = this.x - other.x;
+            const dy = this.y - other.y;
+            const r = this.radius + other.radius;
+            return (dx * dx + dy * dy) < (r * r);
+        }
+
+        if (other.width !== undefined && other.height !== undefined) {
+            const closestX = Math.max(other.x, Math.min(this.x, other.x + other.width));
+            const closestY = Math.max(other.y, Math.min(this.y, other.y + other.height));
+
+            const dx = this.x - closestX;
+            const dy = this.y - closestY;
+            return (dx * dx + dy * dy) < (this.radius * this.radius);
+        }
+
+        return false;
+    }
+
+    // Individual detectCollision method for Enemy
+    detectCollision(entityList) {
+        entityList.forEach(other => {
+            if (other === this) return;
+
+            if (this.intersects(other)) {
+                const dx = this.x - other.x;
+                const dy = this.y - other.y;
+                const distance = Math.hypot(dx, dy);
+                const minDist = this.radius + (other.radius || 15);
+
+                if (distance < minDist && distance > 0) {
+                    const overlap = minDist - distance;
+                    const angle = Math.atan2(dy, dx);
+                    
+                    // Push enemy back
+                    this.x += Math.cos(angle) * overlap;
+                    this.y += Math.sin(angle) * overlap;
+                }
+            }
+        });
+    }
+
     update(dt) {
         if (this.state === "caught") return;
 
@@ -85,5 +137,25 @@ export class Enemy extends SuperClass {
     catchPlayer() {
         this.state = "caught";
         this.isCaught = true;
+    }
+
+    draw(ctx, camera) {
+        ctx.save();
+        // Adjust for camera offset if your camera tracks the player
+        const renderX = this.x - (camera ? camera.x : 0);
+        const renderY = this.y - (camera ? camera.y : 0);
+
+        ctx.translate(renderX, renderY);
+        ctx.rotate(this.facing);
+
+        // Draw enemy placeholder rectangle or image
+        if (this.img && this.img.complete) {
+            ctx.drawImage(this.img, -this.width / 2, -this.height / 2, this.width, this.height);
+        } else {
+            ctx.fillStyle = 'red'; // Fallback color if image isn't loaded yet
+            ctx.fillRect(-15, -15, 30, 30);
+        }
+
+        ctx.restore();
     }
 }

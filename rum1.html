@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Planritning 1 - 1920x1080 Canvas</title>
+    <title>Planritning 1 - 1920x1080</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         * {
@@ -53,6 +53,12 @@
             const canvas = document.getElementById('floorPlanCanvas');
             const ctx = canvas.getContext('2d');
 
+            // Bakgrundsbild (samma princip som rum 3). Byt filnamn här om din bild heter något annat.
+            const backgroundImage = new Image();
+            backgroundImage.onload = () => draw();
+            backgroundImage.onerror = () => console.warn('Hittade inte pictures/rum1.png');
+            backgroundImage.src = 'pictures/rum1.png';
+
             // Koordinater nedan är angivna i skissens (referensbildens) enheter
             // och räknas om till canvas (1920x1080) med sx/sy/sl.
             const SCALE = 2.85;
@@ -79,13 +85,31 @@
                 { name: "VÄXT 3",        x1: 396, y1: 65,  x2: 404, y2: 77,  img: null },
                 { name: "VÄXT 4",        x1: 396, y1: 86,  x2: 404, y2: 98,  img: null },
                 { name: "VÄXT 5",        x1: 396, y1: 272, x2: 404, y2: 284, img: null },
-                { name: "SKÅP (vid låst dörr)", x1: 438, y1: 130, x2: 468, y2: 143, img: null }
             ];
 
             function draw() {
-                // Golvyta
+                // Golvyta (reserv om bilden inte hittas)
                 ctx.fillStyle = "#e2e8f0";
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                // Bakgrundsbilden ritas i ett eget try/catch, så att ett fel här
+                // aldrig kan stoppa resten av ritningen (väggar, objekt, vakter).
+                try {
+                    if (backgroundImage.complete && backgroundImage.naturalWidth > 0) {
+                        const left = sx(10), top = sy(12);
+                        const width = sx(648) - left, height = sy(370) - top;
+                        const scale = Math.max(width / backgroundImage.naturalWidth, height / backgroundImage.naturalHeight);
+                        const sourceWidth = width / scale, sourceHeight = height / scale;
+                        const sourceX = (backgroundImage.naturalWidth - sourceWidth) / 2;
+                        const sourceY = (backgroundImage.naturalHeight - sourceHeight) / 2;
+                        ctx.save();
+                        ctx.globalAlpha = 0.95;
+                        ctx.drawImage(backgroundImage, sourceX, sourceY, sourceWidth, sourceHeight, left, top, width, height);
+                        ctx.restore();
+                    }
+                } catch (err) {
+                    console.error("Kunde inte rita bakgrundsbilden:", err);
+                }
 
                 drawSolidWalls();
                 drawExitAndEntrance();
