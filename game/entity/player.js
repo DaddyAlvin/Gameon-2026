@@ -7,6 +7,8 @@ export class Player extends SuperClass {
 
     this.x = x;
     this.y = y;
+    this.width = width;
+    this.height = height;
     this.speed = speed;
     this.angle = 0;
 

@@ -1,5 +1,5 @@
 export class SuperClass {
-    constructor(range, fov, direction, img) {
+    constructor(x, y, width, height, range, fov, direction, img) {
         this.range = range;
         this.fov = fov;
         this.direction = direction;
@@ -15,6 +15,6 @@ export class SuperClass {
     }
 
     vissionCone() {
-        
+
     }
 }
