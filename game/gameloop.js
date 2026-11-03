@@ -1,3 +1,4 @@
+
 import { Canvas, ctx } from "./canvas.js";
 import { Player } from "./entity/player.js";
 import { Enemy } from "./entity/enemy.js";
@@ -139,3 +140,4 @@ function gameLoop() {
 
 // Starta loopen
 gameLoop();
+
