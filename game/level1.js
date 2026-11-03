@@ -1,0 +1,274 @@
+window.onload = function() {
+            const canvas = document.getElementById('floorPlanCanvas');
+            const ctx = canvas.getContext('2d');
+
+            // Bakgrundsbild (samma princip som rum 3). Byt filnamn här om din bild heter något annat.
+            const backgroundImage = new Image();
+            backgroundImage.onload = () => draw();
+            backgroundImage.onerror = () => console.warn('Hittade inte pictures/rum1.png');
+            backgroundImage.src = 'pictures/rum1.png';
+
+            const mariaBackdrop = new Image();
+            mariaBackdrop.onload = () => draw();
+            mariaBackdrop.src = 'pictures/billys.png';
+
+            // Koordinater nedan är angivna i skissens (referensbildens) enheter
+            // och räknas om till canvas (1920x1080) med sx/sy/sl.
+            const SCALE = 2.85;
+            const sx = (x) => 40 + (x - 10) * SCALE;
+            const sy = (y) => 40 + (y - 12) * SCALE;
+            const sl = (l) => l * SCALE;
+
+            // Hjälpare: rektangel från skiss-koordinater (x1,y1) till (x2,y2)
+            function rect(x1, y1, x2, y2) {
+                ctx.fillRect(sx(x1), sy(y1), sl(x2 - x1), sl(y2 - y1));
+            }
+
+            // ------------------------------------------------------------
+            // OBJEKT - fyllda med svart nu. Byt ut genom att sätta `img`
+            // till en Image() så ritas bilden istället för den svarta rutan.
+            // ------------------------------------------------------------
+            const objects = [
+                { name: "BILJARDBORD",   x1: 40,  y1: 141, x2: 234, y2: 261, img: null },
+                { name: "BOKHYLLA 1",    x1: 443, y1: 21,  x2: 607, y2: 52,  img: null },
+                { name: "BOKHYLLA 2",    x1: 443, y1: 70,  x2: 607, y2: 102, img: null },
+                { name: "BOKHYLLA 3",    x1: 402, y1: 217, x2: 566, y2: 248, img: null },
+                { name: "VÄXT 1",        x1: 392, y1: 23,  x2: 412, y2: 41,  img: null },
+                { name: "VÄXT 2",        x1: 392, y1: 41,  x2: 412, y2: 59,  img: null },
+                { name: "VÄXT 3",        x1: 392, y1: 62,  x2: 412, y2: 80,  img: null },
+                { name: "VÄXT 4",        x1: 392, y1: 83,  x2: 412, y2: 101, img: null },
+                { name: "VÄXT 5",        x1: 392, y1: 269, x2: 412, y2: 287, img: null },
+            ];
+
+            function draw() {
+                // Golvyta (reserv om bilden inte hittas)
+                ctx.fillStyle = "#e2e8f0";
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                // Bakgrundsbilden ritas i ett eget try/catch, så att ett fel här
+                // aldrig kan stoppa resten av ritningen (väggar, objekt, vakter).
+                try {
+                    if (backgroundImage.complete && backgroundImage.naturalWidth > 0) {
+                        const left = sx(10), top = sy(12);
+                        const width = sx(648) - left, height = sy(370) - top;
+                        const scale = Math.max(width / backgroundImage.naturalWidth, height / backgroundImage.naturalHeight);
+                        const sourceWidth = width / scale, sourceHeight = height / scale;
+                        const sourceX = (backgroundImage.naturalWidth - sourceWidth) / 2;
+                        const sourceY = (backgroundImage.naturalHeight - sourceHeight) / 2;
+                        ctx.save();
+                        ctx.globalAlpha = 0.95;
+                        ctx.drawImage(backgroundImage, sourceX, sourceY, sourceWidth, sourceHeight, left, top, width, height);
+                        ctx.restore();
+                    }
+                } catch (err) {
+                    console.error("Kunde inte rita bakgrundsbilden:", err);
+                }
+
+                drawSolidWalls();
+                drawExitAndEntrance();
+                drawLockedDoor();
+                drawObjects();
+                drawGuardPathAndCharacters();
+            }
+
+            function drawSolidWalls() {
+                ctx.fillStyle = "#000000";
+
+                // --- Yttre ram ---
+                rect(10, 12, 14, 370);          // Vänster vägg
+                rect(10, 366, 648, 370);        // Nedre vägg
+                rect(10, 12, 200, 16);          // Övre vägg (vänster om EXIT)
+                rect(275, 12, 648, 16);         // Övre vägg (höger om EXIT)
+                rect(644, 12, 648, 143);        // Höger vägg (ovanför Entrance)
+                rect(644, 200, 648, 370);       // Höger vägg (under Entrance)
+
+                // Hörnmarkeringar
+                rect(10, 12, 23, 24);
+                rect(10, 357, 23, 370);
+
+                // --- Inre väggar ---
+                rect(369, 12, 383, 143);        // Vertikal vägg (biblioteket)
+                rect(369, 138, 385, 143);       // Bibliotekets nedre vägg (vänster om ingången)
+                rect(438, 138, 648, 143);       // Bibliotekets nedre vägg (höger om ingången)
+                rect(369, 200, 648, 205);       // Övre vägg nedre högra rummet
+                rect(369, 200, 376, 370);       // Vertikal vägg (nedre högra rummet)
+                rect(376, 200, 383, 289);       // Vertikal vägg, ovanför öppning
+                rect(376, 340, 383, 370);       // Vertikal vägg, under öppning
+            }
+
+            function drawExitAndEntrance() {
+                // --- EXIT (längst upp) ---
+                const x1 = sx(200), x2 = sx(275);
+                ctx.fillStyle = "#22c55e";
+                ctx.fillRect(x1, sy(12) + 2, x2 - x1, 8);
+
+                ctx.fillStyle = "#15803d";
+                ctx.font = "bold 24px sans-serif";
+                ctx.textAlign = "center";
+                ctx.textBaseline = "bottom";
+                ctx.fillText("EXIT", (x1 + x2) / 2, sy(12) - 4);
+
+                // --- ENTRANCE (höger) ---
+                const y1 = sy(143), y2 = sy(200);
+                ctx.fillStyle = "#3b82f6";
+                ctx.fillRect(sx(644), y1, 8, y2 - y1);
+
+                ctx.save();
+                ctx.translate(sx(648) + 24, (y1 + y2) / 2);
+                ctx.rotate(Math.PI / 2);
+                ctx.fillStyle = "#1d4ed8";
+                ctx.font = "bold 24px sans-serif";
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillText("Entrance", 0, 0);
+                ctx.restore();
+            }
+
+            function drawLockedDoor() {
+                // Låst dörr / No access: ingången till biblioteket (öppning i nedre väggen)
+                const x = sx(385), w = sl(438 - 385);
+                const cy = sy(140.5);        // väggens mittlinje
+                const h = 22;
+
+                ctx.save();
+                ctx.fillStyle = "#ef4444";
+                ctx.beginPath();
+                ctx.roundRect(x, cy - h / 2, w, h, 4);
+                ctx.fill();
+
+                ctx.strokeStyle = "#7f1d1d";
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                ctx.fillStyle = "#ffffff";
+                ctx.font = "bold 12px sans-serif";
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillText("Låst dörr / No access", x + w / 2, cy);
+                ctx.restore();
+            }
+
+            function drawObjects() {
+                objects.forEach(o => {
+                    ctx.save();
+                    const x = sx(o.x1), y = sy(o.y1);
+                    const w = sl(o.x2 - o.x1), h = sl(o.y2 - o.y1);
+                    if (o.img) {
+                        ctx.drawImage(o.img, x, y, w, h);
+                    } else {
+                        ctx.fillStyle = "#000000";
+                        ctx.fillRect(x, y, w, h);
+                    }
+                    ctx.restore();
+                });
+            }
+
+            function drawGuardPathAndCharacters() {
+                // Vaktens rörelsebana (medurs, rundade hörn, pilar på varje sida)
+                const L = sx(234), R = sx(324), T = sy(117), B = sy(279);
+                const r = 26;
+
+                ctx.save();
+                ctx.strokeStyle = "#475569";
+                ctx.fillStyle = "#475569";
+                ctx.lineWidth = 3;
+                ctx.lineJoin = "round";
+                ctx.lineCap = "round";
+                ctx.setLineDash([14, 8]);
+                ctx.beginPath();
+                ctx.moveTo(L + r, T);
+                ctx.arcTo(R, T, R, B, r);
+                ctx.arcTo(R, B, L, B, r);
+                ctx.arcTo(L, B, L, T, r);
+                ctx.arcTo(L, T, R, T, r);
+                ctx.closePath();
+                ctx.stroke();
+                ctx.setLineDash([]);
+
+                // Riktningspilar (medurs): höger på toppen, ner på höger sida,
+                // vänster på botten, upp på vänster sida
+                const midX = (L + R) / 2, midY = (T + B) / 2;
+                drawArrowHead(midX, T, 0);
+                drawArrowHead(R, midY, Math.PI / 2);
+                drawArrowHead(midX, B, Math.PI);
+                drawArrowHead(L, sy(160), -Math.PI / 2);
+                ctx.restore();
+
+                // Vakt och Maria (ritas ovanpå banan)
+                drawBadge(sx(234), sy(236), "VAKT", "#2563eb", "#ffffff");
+                if (mariaBackdrop.complete && mariaBackdrop.naturalWidth > 0) {
+                    ctx.drawImage(mariaBackdrop, sx(547) - 40, sy(316) - 40, 80, 80);
+                }
+                drawBadge(sx(407), sy(316), "MARIA", "#ec4899", "#ffffff");
+            }
+
+            // Fylld pilspets i punkten (x, y), vinkel 0 = åt höger
+            function drawArrowHead(x, y, angle) {
+                ctx.save();
+                ctx.translate(x, y);
+                ctx.rotate(angle);
+                ctx.beginPath();
+                ctx.moveTo(12, 0);
+                ctx.lineTo(-8, -9);
+                ctx.lineTo(-8, 9);
+                ctx.closePath();
+                ctx.fill();
+                ctx.restore();
+            }
+
+            function drawBadge(x, y, label, strokeColor, fillColor) {
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(x, y, 40, 0, Math.PI * 2);
+                ctx.fillStyle = fillColor;
+                ctx.fill();
+
+                ctx.strokeStyle = strokeColor;
+                ctx.lineWidth = 3;
+                ctx.stroke();
+
+                ctx.fillStyle = "#0f172a";
+                ctx.font = "bold 16px sans-serif";
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillText(label, x, y);
+                ctx.restore();
+            }
+
+            // ------------------------------------------------------------
+            // BILDER från mappen "pictures". Provar vanliga filändelser i ordning;
+            // om ingen hittas ligger den svarta rutan kvar.
+            // ------------------------------------------------------------
+            const PICTURES_DIR = "pictures";
+            const EXTENSIONS = ["png", "jpg", "jpeg", "webp", "gif", "svg"];
+
+            function loadObjectImage(obj, baseName, i = 0) {
+                if (i >= EXTENSIONS.length) {
+                    console.warn(`Hittade ingen bild för "${baseName}" i mappen ${PICTURES_DIR}/`);
+                    return;
+                }
+                const img = new Image();
+                img.onload = () => { obj.img = img; draw(); };
+                img.onerror = () => loadObjectImage(obj, baseName, i + 1);
+                img.src = `${PICTURES_DIR}/${encodeURIComponent(baseName)}.${EXTENSIONS[i]}`;
+            }
+
+            // Vilken bild som hör till vilket objekt (namnet utan filändelse)
+            const objectImages = {
+                "BILJARDBORD": "biljard",
+                "BOKHYLLA 1": "bokhylla",
+                "BOKHYLLA 2": "bokhylla",
+                "BOKHYLLA 3": "bokhylla",
+                "VÄXT 1": "blomma",
+                "VÄXT 2": "blomma",
+                "VÄXT 3": "blomma",
+                "VÄXT 4": "blomma",
+                "VÄXT 5": "blomma"
+            };
+            objects.forEach(o => {
+                if (objectImages[o.name]) loadObjectImage(o, objectImages[o.name]);
+            });
+
+            // Rendera ritningen
+            draw();
+        };

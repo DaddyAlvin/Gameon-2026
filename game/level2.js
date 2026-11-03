@@ -1,0 +1,237 @@
+window.onload = function() {
+            const canvas = document.getElementById('floorPlanCanvas');
+            const ctx = canvas.getContext('2d');
+
+            // Bakgrundsbild (samma princip som rum 3). Byt filnamn här om din bild heter något annat.
+            const backgroundImage = new Image();
+            backgroundImage.onload = () => draw();
+            backgroundImage.onerror = () => console.warn('Hittade inte pictures/rum1.png - ritar utan bakgrundsbild');
+            backgroundImage.src = 'pictures/rum1.png';
+
+            const flashlightImage = new Image();
+            flashlightImage.onload = () => draw();
+            flashlightImage.src = 'pictures/ficklampa.png';
+
+            // Koordinater nedan är angivna i skissens (referensbildens) enheter
+            // och räknas om till canvas (1920x1080) med sx/sy/sl.
+            const SCALE = 3.8;
+            const sx = (x) => 40 + (x - 10) * SCALE;
+            const sy = (y) => 40 + (y - 18) * SCALE;
+            const sl = (l) => l * SCALE;
+
+            // Hjälpare: rektangel från skiss-koordinater (x1,y1) till (x2,y2)
+            function rect(x1, y1, x2, y2) {
+                ctx.fillRect(sx(x1), sy(y1), sl(x2 - x1), sl(y2 - y1));
+            }
+
+            // ------------------------------------------------------------
+            // OBJEKT - fyllda med svart nu. Byt ut genom att sätta `img`
+            // till en Image() så ritas bilden istället för den svarta rutan.
+            // ------------------------------------------------------------
+            const objects = [
+                { name: "STORT OBJEKT (övre mitten)", x1: 172, y1: 22,  x2: 328, y2: 105, shape: "rect", img: null },
+                { name: "BILJARDBORD",                 x1: 97,  y1: 154, x2: 156, y2: 246, shape: "rect", img: null },
+                { name: "SKÅP",                        x1: 12,  y1: 205, x2: 62,  y2: 279, shape: "rect", img: null },
+                { name: "BÄNK 1 (höger rum)",          x1: 353, y1: 63,  x2: 401, y2: 78,  shape: "rect", img: null },
+                { name: "BÄNK 2 (höger rum)",          x1: 419, y1: 123, x2: 467, y2: 137, shape: "rect", img: null },
+                { name: "BÄNK 3 (höger rum)",          x1: 351, y1: 180, x2: 398, y2: 195, shape: "rect", img: null },
+                { name: "TAVLA",                       x1: 343, y1: 273, x2: 467, y2: 279, shape: "rect", fill: "#ffffff", img: null },
+                { name: "BORD (lilla rummet)",         x1: 270, y1: 221, x2: 288, y2: 263, shape: "rect", img: null }
+            ];
+
+            function draw() {
+                // Golvyta
+                ctx.fillStyle = "#e2e8f0";
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                // Anpassa bakgrundsbilden till ytterväggarnas område utan att förvränga den.
+                // Eget try/catch så att ett fel här aldrig stoppar resten av ritningen.
+                try {
+                    if (backgroundImage.complete && backgroundImage.naturalWidth > 0) {
+                        const left = sx(10), top = sy(18);
+                        const width = sx(481) - left, height = sy(283) - top;
+                        const scale = Math.max(width / backgroundImage.naturalWidth, height / backgroundImage.naturalHeight);
+                        const sourceWidth = width / scale, sourceHeight = height / scale;
+                        const sourceX = (backgroundImage.naturalWidth - sourceWidth) / 2;
+                        const sourceY = (backgroundImage.naturalHeight - sourceHeight) / 2;
+                        ctx.drawImage(backgroundImage, sourceX, sourceY, sourceWidth, sourceHeight, left, top, width, height);
+                    }
+                } catch (err) {
+                    console.error("Kunde inte rita bakgrundsbilden:", err);
+                }
+
+                drawSolidWalls();
+                drawDoors();
+                drawExitAndEntrance();
+                drawObjects();
+                drawGuardPathAndCharacters();
+                drawLabels();
+            }
+
+            function drawSolidWalls() {
+                ctx.fillStyle = "#000000";
+
+                // --- Yttre ram ---
+                rect(10, 18, 14, 283);        // Vänster vägg
+                rect(10, 279, 481, 283);      // Nedre vägg
+                rect(477, 18, 481, 283);      // Höger vägg
+
+                // Övre vägg (öppningar för Entrance och EXIT)
+                rect(10, 18, 60, 22);         // Vänster om Entrance
+                rect(115, 18, 415, 22);       // Mellan Entrance och EXIT
+                rect(470, 18, 481, 22);       // Höger om EXIT
+
+                // --- Mittvägg mellan vänster och höger rum (öppning för dörr) ---
+                rect(326, 22, 330, 125);
+                rect(326, 146, 330, 279);
+
+                // --- Lilla nedre rummet ---
+                rect(204, 168, 243, 172);     // Övre vägg vänster om dörr
+                rect(265, 168, 326, 172);     // Övre vägg höger om dörr
+                rect(203, 168, 207, 279);     // Vänster vägg
+            }
+
+            function drawDoors() {
+                ctx.save();
+                ctx.strokeStyle = "#000000";
+                ctx.lineWidth = 2;
+
+                ctx.restore();
+            }
+
+            function drawExitAndEntrance() {
+                // --- ENTRANCE (övre vänster) ---
+                const ex1 = sx(60), ex2 = sx(115);
+                ctx.fillStyle = "#3b82f6";
+                ctx.fillRect(ex1, sy(18) + 4, ex2 - ex1, 8);
+
+                ctx.fillStyle = "#1d4ed8";
+                ctx.font = "bold 24px sans-serif";
+                ctx.textAlign = "center";
+                ctx.textBaseline = "bottom";
+                ctx.fillText("Entrance", (ex1 + ex2) / 2, sy(18) - 4);
+
+                // --- EXIT (övre höger) ---
+                const xx1 = sx(415), xx2 = sx(470);
+                ctx.fillStyle = "#22c55e";
+                ctx.fillRect(xx1, sy(18) + 4, xx2 - xx1, 8);
+
+                ctx.fillStyle = "#15803d";
+                ctx.font = "bold 24px sans-serif";
+                ctx.textAlign = "center";
+                ctx.textBaseline = "bottom";
+                ctx.fillText("EXIT", (xx1 + xx2) / 2, sy(18) - 4);
+            }
+
+            function drawObjects() {
+                objects.forEach(o => {
+                    ctx.save();
+                    if (o.shape === "circle") {
+                        if (o.img) {
+                            ctx.drawImage(o.img, sx(o.cx) - sl(o.r), sy(o.cy) - sl(o.r), sl(o.r * 2), sl(o.r * 2));
+                        } else {
+                            ctx.fillStyle = "#000000";
+                            ctx.beginPath();
+                            ctx.arc(sx(o.cx), sy(o.cy), sl(o.r), 0, Math.PI * 2);
+                            ctx.fill();
+                        }
+                    } else {
+                        const x = sx(o.x1), y = sy(o.y1);
+                        const w = sl(o.x2 - o.x1), h = sl(o.y2 - o.y1);
+                        if (o.img) {
+                            ctx.drawImage(o.img, x, y, w, h);
+                        } else {
+                            ctx.fillStyle = o.fill || "#000000";
+                            ctx.fillRect(x, y, w, h);
+                            if (o.fill) {
+                                ctx.strokeStyle = "#475569";
+                                ctx.lineWidth = 2;
+                                ctx.strokeRect(x, y, w, h);
+                            }
+                        }
+                    }
+                    ctx.restore();
+                });
+            }
+
+            function drawGuardPathAndCharacters() {
+                // Vaktens patrullväg
+
+                // Vakter (placeholder badges)
+                drawBadge(sx(134), sy(135), "VAKT", "#2563eb", "#ffffff");
+                drawBadge(sx(79), sy(255), "VAKT EFTER", "#2563eb", "#ffffff", 13);
+                drawBadge(sx(407), sy(243), "VAKT", "#2563eb", "#ffffff");
+
+                // Ficklampa
+                if (flashlightImage.complete && flashlightImage.naturalWidth > 0) {
+                    ctx.drawImage(flashlightImage, sx(148) - 40, sy(42) - 40, 120, 100);
+                }
+            }
+
+            function drawLabels() {
+                ctx.save();
+                ctx.fillStyle = "#0f172a";
+                ctx.strokeStyle = "#0f172a";
+                ctx.lineWidth = 2;
+                ctx.textAlign = "center";
+
+                // Tavla
+                ctx.font = "bold 16px sans-serif";
+                ctx.textBaseline = "bottom";
+
+                ctx.restore();
+            }
+
+            function drawBadge(x, y, label, strokeColor, fillColor, fontSize = 16) {
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(x, y, 40, 0, Math.PI * 2);
+                ctx.fillStyle = fillColor;
+                ctx.fill();
+
+                ctx.strokeStyle = strokeColor;
+                ctx.lineWidth = 3;
+                ctx.stroke();
+
+                if (label) {
+                    ctx.fillStyle = "#0f172a";
+                    ctx.font = `bold ${fontSize}px sans-serif`;
+                    ctx.textAlign = "center";
+                    ctx.textBaseline = "middle";
+                    ctx.fillText(label, x, y);
+                }
+                ctx.restore();
+            }
+
+            // ------------------------------------------------------------
+            // BILDER från mappen "pictures". Provar vanliga filändelser i ordning;
+            // om ingen hittas ligger den svarta rutan kvar.
+            // ------------------------------------------------------------
+            const PICTURES_DIR = "pictures";
+            const EXTENSIONS = ["png", "jpg", "jpeg", "webp", "gif", "svg"];
+
+            function loadObjectImage(obj, baseName, i = 0) {
+                if (i >= EXTENSIONS.length) {
+                    console.warn(`Hittade ingen bild för "${baseName}" i mappen ${PICTURES_DIR}/`);
+                    return;
+                }
+                const img = new Image();
+                img.onload = () => { obj.img = img; draw(); };
+                img.onerror = () => loadObjectImage(obj, baseName, i + 1);
+                // encodeURIComponent så att filnamn med å/ä/ö fungerar
+                img.src = `${PICTURES_DIR}/${encodeURIComponent(baseName)}.${EXTENSIONS[i]}`;
+            }
+
+            // Skåpet använder Skåp.png
+            const skap = objects.find(o => o.name === "SKÅP");
+            if (skap) loadObjectImage(skap, "Skåp");
+
+            // Alla bord använder bord.png
+            ["BILJARDBORD", "BORD (lilla rummet)", "BÄNK 1 (höger rum)", "BÄNK 2 (höger rum)", "BÄNK 3 (höger rum)"].forEach(name => {
+                const obj = objects.find(o => o.name === name);
+                if (obj) loadObjectImage(obj, "bord");
+            });
+
+            // Rendera ritningen
+            draw();
+        };

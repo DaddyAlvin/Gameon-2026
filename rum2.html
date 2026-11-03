@@ -207,16 +207,6 @@
 
             function drawGuardPathAndCharacters() {
                 // Vaktens patrullväg
-                ctx.save();
-                ctx.strokeStyle = "#000000";
-                ctx.lineWidth = 2;
-                ctx.beginPath();
-                ctx.moveTo(sx(156), sy(131));
-                ctx.lineTo(sx(181), sy(207));
-                ctx.lineTo(sx(157), sy(266));
-                ctx.lineTo(sx(90), sy(266));
-                ctx.stroke();
-                ctx.restore();
 
                 // Vakter (placeholder badges)
                 drawBadge(sx(134), sy(135), "VAKT", "#2563eb", "#ffffff");

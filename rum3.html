@@ -55,6 +55,9 @@
             const backgroundImage = new Image();
             backgroundImage.onload = draw;
             backgroundImage.src = 'pictures/background.png';
+            const keyImage = new Image();
+            keyImage.onload = draw;
+            keyImage.src = 'pictures/nyckel.png';
 
             // Koordinater nedan är angivna i skissens (referensbildens) enheter
             // och räknas om till canvas (3920x1280) med sx/sy/sl.
@@ -86,7 +89,8 @@
                 { name: "HANDFAT 1",                   cx: 430, cy: 60,  rx: 10,  ry: 8,      shape: "ellipse", fill: "#ffffff", img: null },
                 { name: "HANDFAT 2",                   cx: 454, cy: 60,  rx: 10,  ry: 8,      shape: "ellipse", fill: "#ffffff", img: null },
                 { name: "HANDFAT 3",                   cx: 478, cy: 60,  rx: 10,  ry: 8,      shape: "ellipse", fill: "#ffffff", img: null },
-                { name: "HANDFAT 4",                   cx: 502, cy: 60,  rx: 10,  ry: 8,      shape: "ellipse", fill: "#ffffff", img: null }
+                { name: "HANDFAT 4",                   cx: 502, cy: 60,  rx: 10,  ry: 8,      shape: "ellipse", fill: "#ffffff", img: null },
+                { name: "NYCKEL",                      cx: 310, cy: 340,                         shape: "key", img: keyImage }
             ];
 
             function draw() {
@@ -198,7 +202,27 @@
             function drawObjects() {
                 objects.forEach(o => {
                     ctx.save();
-                    if (o.shape === "ellipse") {
+                    if (o.shape === "key") {
+                        const x = sx(o.cx), y = sy(o.cy);
+                        if (o.img && o.img.complete && o.img.naturalWidth > 0) {
+                            const boxW = sl(33), boxH = sl(18);
+                            const scale = Math.min(boxW / o.img.naturalWidth, boxH / o.img.naturalHeight);
+                            const width = o.img.naturalWidth * scale, height = o.img.naturalHeight * scale;
+                            ctx.drawImage(o.img, x - width / 2, y - height / 2, width, height);
+                        } else {
+                        ctx.strokeStyle = "#facc15";
+                        ctx.lineWidth = sl(4);
+                        ctx.lineCap = "round";
+                        ctx.beginPath();
+                        ctx.arc(x, y, sl(7), 0, Math.PI * 2);
+                        ctx.moveTo(x + sl(7), y);
+                        ctx.lineTo(x + sl(24), y);
+                        ctx.lineTo(x + sl(24), y + sl(5));
+                        ctx.moveTo(x + sl(17), y);
+                        ctx.lineTo(x + sl(17), y + sl(5));
+                        ctx.stroke();
+                        }
+                    } else if (o.shape === "ellipse") {
                         const cx = sx(o.cx), cy = sy(o.cy), rx = sl(o.rx), ry = sl(o.ry);
                         if (o.img) {
                             // Bilden anpassas till objektets ruta utan att tänjas ut
@@ -233,8 +257,7 @@
 
             function drawGuardsAndPaths() {
                 // Rörelsepilar
-                drawArrow(sx(327), sy(152), sx(369), sy(152));
-                drawArrow(sx(945), sy(200), sx(996), sy(200));
+                
 
                 // Vakter (placeholder badges)
                 drawBadge(sx(306), sy(153), "VAKT", "#2563eb", "#ffffff");
