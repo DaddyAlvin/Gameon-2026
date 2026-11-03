@@ -14,20 +14,20 @@ export class Player extends SuperClass {
     this.radius = 15;
     this.width = 30;
     this.height = 30;
-
-    // --- Animation Assets & State ---
+// --- Animation Assets & State ---
     this.imgIdle = new Image();
-    this.imgIdle.src = 'basechar.png';
+    this.imgIdle.src = './images/basechar.png';
 
     this.imgLeftFoot = new Image();
-    this.imgLeftFoot.src = 'basechar_leftfeet.png';
+    this.imgLeftFoot.src = './images/basechar_leftfeet.png';
 
     this.imgRightFoot = new Image();
-    this.imgRightFoot.src = 'basechar_rightfeet.png';
+    this.imgRightFoot.src = './images/basechar_rightfeet.png';
 
     this.frameTimer = 0;
-    this.frameInterval = 12; // Speed of walking step cycle
-    this.walkStep = 0;        // 0: idle/standing, 1: left foot, 2: right foot
+    this.frameInterval = 12; // Frames to hold each step (lower = faster feet)
+    this.walkStep = 0;       // 0: idle, 1: left foot, 2: right foot
+
   }
 
   // returns box size for walls or tile checks
@@ -104,22 +104,24 @@ export class Player extends SuperClass {
     this.y += vy;
   }
 
-  draw(ctx) {
+draw(ctx) {
     ctx.save();
     ctx.translate(this.x, this.y);
-    ctx.rotate(this.angle);
 
-    // 1. Draw the laser guide line
+    // Keep rotation matching your sprite
+    ctx.rotate(this.angle + Math.PI / 2);
+
+    // Laser shoots 180 deg opposite (forward from head instead of out the back)
     ctx.beginPath();
     ctx.strokeStyle = 'rgba(255, 0, 0, 0.4)'; 
     ctx.lineWidth = 1;
     ctx.setLineDash([6, 4]);                     
-    ctx.moveTo(0, 0);
-    ctx.lineTo(800, 0);                                  
+    ctx.moveTo(0, -15);     // front tip of the head
+    ctx.lineTo(0, -800);    // project forward
     ctx.stroke();
     ctx.setLineDash([]);                     
 
-    // 2. Select the correct image based on walkStep
+    // Select image based on footstep
     let activeImage;
     if (this.walkStep === 1) {
       activeImage = this.imgLeftFoot;
@@ -129,8 +131,7 @@ export class Player extends SuperClass {
       activeImage = this.imgIdle;
     }
 
-    // 3. Draw the character image centered around (0,0)
-    // Offset by -width/2 and -height/2 so rotation works smoothly around the middle
+    // Draw sprite centered
     ctx.drawImage(activeImage, -32, -32, 64, 64);
 
     ctx.restore();
