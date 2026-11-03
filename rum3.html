@@ -15,7 +15,7 @@
         html, body {
             width: 100%;
             height: 100%;
-            background-color: #0d0d0d;
+            background-color: #070707;
             overflow: hidden;
             display: flex;
             justify-content: center;
@@ -33,7 +33,7 @@
         }
 
         canvas {
-            background-color: #e5e7eb;
+            background-image: url('pictures/background.png');
             max-width: 100%;
             max-height: 100%;
             aspect-ratio: 3920 / 1280;
@@ -52,6 +52,9 @@
         window.onload = function() {
             const canvas = document.getElementById('floorPlanCanvas');
             const ctx = canvas.getContext('2d');
+            const backgroundImage = new Image();
+            backgroundImage.onload = draw;
+            backgroundImage.src = 'pictures/background.png';
 
             // Koordinater nedan är angivna i skissens (referensbildens) enheter
             // och räknas om till canvas (3920x1280) med sx/sy/sl.
@@ -75,21 +78,30 @@
                 { name: "STORT OMRÅDE (övre höger)",  x1: 570, y1: 20,  x2: 1112, y2: 158, shape: "rect", img: null },
                 { name: "TOPP-BLOCK",                  x1: 410, y1: 20,  x2: 570,  y2: 52,  shape: "rect", img: null },
                 { name: "STORT BORD",                  x1: 672, y1: 297, x2: 813,  y2: 347, shape: "rect", img: null },
-                { name: "LÅG HYLLA (nere)",            x1: 672, y1: 360, x2: 845,  y2: 377, shape: "rect", img: null },
-                { name: "TJOCK VÄGGDEL / HYLLA",       x1: 822, y1: 260, x2: 845,  y2: 377, shape: "rect", img: null },
+                { name: "LÅG Soffa nedre",            x1: 672, y1: 360, x2: 845,  y2: 377, shape: "rect", img: null },
+                { name: "TJOCK Soffa",       x1: 822, y1: 260, x2: 845,  y2: 377, shape: "rect", img: null },
                 { name: "RUNT OBJEKT 1",               cx: 559, cy: 357, rx: 12, ry: 11,     shape: "ellipse", img: null },
                 { name: "RUNT OBJEKT 2",               cx: 594, cy: 357, rx: 12, ry: 11,     shape: "ellipse", img: null },
                 { name: "RUNT OBJEKT 3",               cx: 631, cy: 357, rx: 12, ry: 11,     shape: "ellipse", img: null },
-                { name: "HANDFAT 1",                   cx: 430, cy: 61,  rx: 6,  ry: 8,      shape: "ellipse", fill: "#ffffff", img: null },
-                { name: "HANDFAT 2",                   cx: 454, cy: 61,  rx: 6,  ry: 8,      shape: "ellipse", fill: "#ffffff", img: null },
-                { name: "HANDFAT 3",                   cx: 478, cy: 61,  rx: 6,  ry: 8,      shape: "ellipse", fill: "#ffffff", img: null },
-                { name: "HANDFAT 4",                   cx: 498, cy: 61,  rx: 6,  ry: 8,      shape: "ellipse", fill: "#ffffff", img: null }
+                { name: "HANDFAT 1",                   cx: 430, cy: 60,  rx: 10,  ry: 8,      shape: "ellipse", fill: "#ffffff", img: null },
+                { name: "HANDFAT 2",                   cx: 454, cy: 60,  rx: 10,  ry: 8,      shape: "ellipse", fill: "#ffffff", img: null },
+                { name: "HANDFAT 3",                   cx: 478, cy: 60,  rx: 10,  ry: 8,      shape: "ellipse", fill: "#ffffff", img: null },
+                { name: "HANDFAT 4",                   cx: 502, cy: 60,  rx: 10,  ry: 8,      shape: "ellipse", fill: "#ffffff", img: null }
             ];
 
             function draw() {
-                // Golvyta
+                // Anpassa bakgrundsbilden till ytterväggarnas område utan att förvränga den.
                 ctx.fillStyle = "#d4d4d4";
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
+                if (backgroundImage.complete && backgroundImage.naturalWidth > 0) {
+                    const left = sx(7), top = sy(19);
+                    const width = sx(1283) - left, height = sy(379) - top;
+                    const scale = Math.max(width / backgroundImage.naturalWidth, height / backgroundImage.naturalHeight);
+                    const sourceWidth = width / scale, sourceHeight = height / scale;
+                    const sourceX = (backgroundImage.naturalWidth - sourceWidth) / 2;
+                    const sourceY = (backgroundImage.naturalHeight - sourceHeight) / 2;
+                    ctx.drawImage(backgroundImage, sourceX, sourceY, sourceWidth, sourceHeight, left, top, width, height);
+                }
 
                 drawSolidWalls();
                 drawObjects();
@@ -117,7 +129,7 @@
                 // --- Övre vänstra rummet ---
                 rect(109, 23, 113, 124);       // Vänster vägg
                 rect(109, 120, 138, 124);      // Nedre vägg (öppning 138-200)
-                rect(200, 120, 537, 124);      // Nedre vägg mot korridor (dörr 537-559)
+                rect(200, 120, 520, 124);      // Nedre vägg mot korridor (dörr 537-559)
                 rect(559, 120, 570, 124);
 
                 // --- Toaletter ---
@@ -134,8 +146,8 @@
 
                 // --- Nedre högra rummet ---
                 rect(843, 238, 864, 242);      // Övre vägg (dörr 864-880)
-                rect(880, 238, 1112, 242);
-                rect(843, 238, 847, 262);      // Koppling mot svart vägg
+                rect(900, 238, 1112, 242);
+                rect(841, 238, 845, 262);      // Koppling mot svart vägg
             }
 
             function drawDoors() {
@@ -155,29 +167,6 @@
                     ctx.lineTo(sx(x2), sy(y));
                     ctx.stroke();
                 });
-
-                vLines([389, 403], 38, 68);        // Dörr ovanför toan (öppnas av knappen)
-                vLines([537, 559], 110, 140);      // Dörr övre vänstra rummet -> korridor
-                vLines([31, 54], 170, 200);        // Dörr nedre vänstra rummet (vänster)
-                vLines([488, 514], 357, 395);      // EXIT-dörr i nedre väggen
-                vLines([864, 880], 228, 252);      // Dörr nedre högra rummet
-                vLines([1199, 1214], 20, 48);      // Entrance-dörr i övre väggen
-                hLines([183, 208], 1092, 1128);    // Dörr mot högra kolumnen (övre)
-                hLines([329, 357], 1092, 1128);    // Dörr mot högra kolumnen (nedre)
-                hLines([60, 76], 320, 338);        // Dörr in till toa (clue) från handfatssidan
-
-                // --- Trösklar (tunna linjer i dörröppningarna) ---
-                ctx.lineWidth = 3.0;
-                hLines([182], 11, 80);             // Vänster dörr, nedre vänstra rummet
-                hLines([240], 843, 897);           // Dörr nedre högra rummet
-                hLines([122], 537, 559);           // Dörr övre vänstra rummet -> korridor
-                hLines([51], 389, 403);            // Dörren som knappen öppnar
-                vLines([329], 60, 76);             // Tröskel toa (clue)
-                hLines([377], 463, 538);           // EXIT-dörr
-                hLines([21], 1177, 1233);          // Entrance-dörr
-                vLines([1110], 158, 183);          // Dörr mot högra kolumnen (övre)
-                vLines([1110], 208, 312);
-                vLines([1110], 312, 377);          // Dörr mot högra kolumnen (nedre)
 
                 ctx.restore();
             }
@@ -212,7 +201,11 @@
                     if (o.shape === "ellipse") {
                         const cx = sx(o.cx), cy = sy(o.cy), rx = sl(o.rx), ry = sl(o.ry);
                         if (o.img) {
-                            ctx.drawImage(o.img, cx - rx, cy - ry, rx * 2, ry * 2);
+                            // Bilden anpassas till objektets ruta utan att tänjas ut
+                            const boxW = rx * 2, boxH = ry * 2;
+                            const k = Math.min(boxW / o.img.width, boxH / o.img.height);
+                            const dw = o.img.width * k, dh = o.img.height * k;
+                            ctx.drawImage(o.img, cx - dw / 2, cy - dh / 2, dw, dh);
                         } else {
                             ctx.fillStyle = o.fill || "#000000";
                             ctx.beginPath();
@@ -275,32 +268,35 @@
                 ctx.textBaseline = "middle";
 
                 // Toalettetiketter
-                ctx.fillText("Toa (clue)", sx(275), sy(70));
-                ctx.fillText("Toa Låst",   sx(275), sy(102));
+                // här ska dialogrutan hamna positon wise  sx(275), sy(70)
 
-                // Små vita markörer vid toaletterna
-                ctx.fillStyle = "#ffffff";
+                // Rektanglar med toalettbild
                 [70, 102].forEach(y => {
-                    ctx.beginPath();
-                    ctx.arc(sx(277), sy(y), 8, 0, Math.PI * 2);
-                    ctx.fill();
+                    const x = sx(267), top = sy(y - 10);
+                    const width = sl(20), height = sl(20);
+                    if (toiletImage.complete && toiletImage.naturalWidth) {
+                        ctx.drawImage(toiletImage, x, top, width, height);
+                    } else {
+                        ctx.fillStyle = "#ffffff";
+                        ctx.fillRect(x, top, width, height);
+                    }
                 });
                 ctx.restore();
 
                 // Knapp under handfatet (öppnar dörren ovanför toan)
                 ctx.save();
-                ctx.fillStyle = "#ef4444";
-                ctx.strokeStyle = "#7f1d1d";
+                ctx.fillStyle = "transparent";
+                ctx.strokeStyle = "transparent";
                 ctx.lineWidth = 4;
                 ctx.beginPath();
-                ctx.arc(sx(454), sy(88), 18, 0, Math.PI * 2);
+                //position: (430, 60), radius: 15
+                ctx.arc(sx(430), sy(60), 15, 0, Math.PI * 2);
                 ctx.fill();
                 ctx.stroke();
                 ctx.fillStyle = "#0f172a";
                 ctx.font = "bold 26px sans-serif";
                 ctx.textAlign = "center";
                 ctx.textBaseline = "top";
-                ctx.fillText("Knapp (interactable)", sx(454), sy(88) + 28);
 
                 // Dörren som knappen öppnar (övre väggen)
                 ctx.strokeStyle = "#ef4444";
@@ -332,6 +328,44 @@
                 }
                 ctx.restore();
             }
+
+            // ------------------------------------------------------------
+            // BILDER från mappen "pictures". Provar vanliga filändelser i
+            // ordning; om ingen hittas ligger den svarta ovalen kvar.
+            // ------------------------------------------------------------
+            const PICTURES_DIR = "pictures";
+            const EXTENSIONS = ["png", "jpg", "jpeg", "webp", "gif", "svg"];
+            const toiletImage = new Image();
+            toiletImage.onload = draw;
+            toiletImage.src = `${PICTURES_DIR}/toa.png`;
+
+            const table = objects.find(o => o.name === "STORT BORD");
+            if (table) loadObjectImage(table, "stenbord");
+
+            function loadObjectImage(obj, baseName, i = 0) {
+                if (i >= EXTENSIONS.length) {
+                    console.warn(`Hittade ingen bild för "${baseName}" i mappen ${PICTURES_DIR}/`);
+                    return;
+                }
+                const img = new Image();
+                img.onload = () => { obj.img = img; draw(); };
+                img.onerror = () => loadObjectImage(obj, baseName, i + 1);
+                img.src = `${PICTURES_DIR}/${baseName}.${EXTENSIONS[i]}`;
+            }
+
+            // De svarta ovalerna längst ner byts mot bilder.
+            [["RUNT OBJEKT 1", "sacksack"], ["RUNT OBJEKT 2", "sacksack2"], ["RUNT OBJEKT 3", "sacksack"]].forEach(([name, image]) => {
+                const obj = objects.find(o => o.name === name);
+                if (obj) loadObjectImage(obj, image);
+            });
+
+            // Handfaten använder bilden handfat.png i stället för ovalerna.
+            ["HANDFAT 1", "HANDFAT 2", "HANDFAT 3", "HANDFAT 4"].forEach(name => {
+                const obj = objects.find(o => o.name === name);
+                if (obj) loadObjectImage(obj, "handfat");
+            });
+
+
 
             // Rendera ritningen
             draw();

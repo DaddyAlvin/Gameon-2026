@@ -1,4 +1,4 @@
-import { SuperClass } from "./superclass";
+import { SuperClass } from "./superclass.js";
 
 export class Player extends SuperClass {
   constructor(x, y, speed = 4) {
