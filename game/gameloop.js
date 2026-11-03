@@ -7,8 +7,16 @@ function changeState(newState) {
 }
 
 
-changeState("playing");
-console.log(state); // Borde skriva ut "playing" i konsolen
+
+
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        changeState("paused");
+        console.log('Du tryckte på Escape!');
+
+        
+    }
+    });
 
 // Skapa din meny-knapp en gång
 const startBtn = document.createElement("button");
@@ -24,11 +32,35 @@ startBtn.addEventListener("click", () => {
     }
 });
 
+const resumeBtn = document.createElement("button");
+resumeBtn.style.backgroundImage = "url('resume.png')";
+resumeBtn.style.position = "absolute";
+resumeBtn.style.top = "50%";
+resumeBtn.style.left = "50%";
+resumeBtn.style.transform = "translate(-50%, -50%)";
+resumeBtn.addEventListener("click", () => {
+    if (state === "paused") {
+        changeState("playing");
+    }
+});
+
+
+const menuOverlay = document.createElement("div");
+menuOverlay.style.position = "fixed";
+menuOverlay.style.top = "0";
+menuOverlay.style.left = "0";
+menuOverlay.style.width = "100vw";
+menuOverlay.style.height = "100vh";
+menuOverlay.style.backgroundColor = "rgba(0, 0, 0, 0.6)";
+
 function update() {
     if (state === "menu") {
         // Kontrollera om knappen inte redan ligger på sidan och lägger till den
         if (!document.body.contains(startBtn)) {
             document.body.appendChild(startBtn);
+        }
+        if (document.documentElement.requestFullscreen) {
+            document.documentElement.requestFullscreen();
         }
         
         // Här kan du ha logik för menyn om det behövs
@@ -38,15 +70,33 @@ function update() {
         if (document.body.contains(startBtn)) {
             startBtn.remove();
         }
+        if (document.body.contains(resumeBtn)) {
+            resumeBtn.remove();
+        }
+        if (document.body.contains(menuOverlay)) {
+            menuOverlay.remove();
+        }
+
+
+        console.log("Spelet har börjat!");
 
         // Här körs själva spelets logik (t.ex. flytta gubbar, rita ut spelplanen etc.)
-        console.log("Spelet har börjat!");
+        
     }
     else if (state === "gameover") {
         // Här kan du ha logik för game over-skärmen om det behövs
     }
     else if (state === "paused") {
         // Här kan du ha logik för paus-skärmen om det behövs
+        console.log("Spelet är pausat!");
+        if (!document.body.contains(menuOverlay)) {
+            document.body.appendChild(menuOverlay);
+        }
+        if (!document.body.contains(resumeBtn)) {
+            document.body.appendChild(resumeBtn);
+        }
+
+
     }
 }
 
