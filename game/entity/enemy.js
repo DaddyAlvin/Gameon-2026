@@ -1,9 +1,13 @@
 import { SuperClass } from "./superclass";
-class Enemy extends SuperClass {
+
+export class Enemy extends SuperClass {
     // Om waypoints är tom [] så står fienden helt stilla
-    constructor(x, y, floor = 0, waypoints = [], facing = 0) {
+    constructor(floor = 0, waypoints = [], facing = 0) {
+        super(x, y, width, height)
         this.x = x;
         this.y = y;
+        this.width = width;
+        this.height = height;
         this.floor = floor;
         this.facing = facing; // Vinkel i radianer (0 = höger)
 

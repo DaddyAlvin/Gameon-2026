@@ -1,7 +1,12 @@
-class Player {
-  constructor(x, y, speed = 4) {
+import { SuperClass } from "./superclass";
+
+export class Player extends SuperClass {
+  constructor(speed = 4) {
+    super(x, y, width, height)
     this.x = x;
     this.y = y;
+    this.width = width;
+    this.height = height;
     this.speed = speed;
     this.angle = 0;
   }

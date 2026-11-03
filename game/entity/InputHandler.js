@@ -1,4 +1,4 @@
-class InputHandler {
+export class InputHandler {
   constructor(canvas) {
     //last key tracking
     this.isA = false;
