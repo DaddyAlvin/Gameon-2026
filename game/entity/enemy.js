@@ -1,5 +1,5 @@
 import { SuperClass } from "./superclass";
-class Enemy extends SuperClass {
+export class Enemy extends SuperClass {
     // Om waypoints är tom [] så står fienden helt stilla
     constructor(x, y, floor = 0, waypoints = [], facing = 0) {
         this.x = x;

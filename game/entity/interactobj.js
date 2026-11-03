@@ -1,4 +1,4 @@
-class Interactableobj {
+export class Interactableobj {
     constructor() {
         
     }
