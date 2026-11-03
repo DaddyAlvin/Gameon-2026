@@ -1,11 +1,8 @@
-import { SuperClass } from "./superclass";
+import { SuperClass } from "./superclass.js";
 
 export class Npc extends SuperClass {
-    constructor() {
-        super(x, y, width, height)
-        this.x = x;
-        this.y = y;
-        this.width = width;
-        this.height = height;
+    constructor(x, y, width, height, img ) {
+        super(x, y, width, height, img);
+
     }
 }
