@@ -85,10 +85,10 @@ export class Player extends SuperClass {
     });
   }
 
-  update(input) {
+  update(input, camera = null) {
     // aim angle
-    const dirX = input.mouse.x - this.x;
-    const dirY = input.mouse.y - this.y;
+    const dirX = input.mouse.x + (camera?.x ?? 0) - this.x;
+    const dirY = input.mouse.y + (camera?.y ?? 0) - this.y;
     this.angle = Math.atan2(dirY, dirX);
     this.direction = this.angle; // sync superclass dir
 

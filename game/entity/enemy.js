@@ -4,6 +4,7 @@ export class Enemy extends SuperClass {
     // Om waypoints är tom [] så står fienden helt stilla
     constructor(x, y, width, height, range, fov, direction, img, floor = 0, waypoints = [], facing = 0) {
         super(x, y, width, height, range, fov, direction, img);
+        this.radius = 15;
         this.floor = floor;
         this.facing = facing; // Vinkel i radianer (0 = höger)
 

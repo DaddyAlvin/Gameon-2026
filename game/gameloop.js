@@ -12,6 +12,10 @@ function changeState(newState) {
 }
 
 const input = new InputHandler(document.querySelector("canvas"));
+const player = entityList.find(entity => entity instanceof Player);
+if (!player) {
+    throw new Error("The entity list must contain a player.");
+}
 
 function resizeCanvas() {
     Canvas.width = window.innerWidth;
@@ -72,7 +76,7 @@ menuOverlay.style.width = "100vw";
 menuOverlay.style.height = "100vh";
 menuOverlay.style.backgroundColor = "rgba(0, 0, 0, 0.6)";
 
-function update() {
+function update(dt) {
     if (state === "menu") {
         // Kontrollera om knappen inte redan ligger på sidan och lägger till den
         if (!document.body.contains(startBtn)) {
@@ -97,8 +101,19 @@ function update() {
         ctx.fillStyle = "white";
         ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
         
-        let player = entityList[0];
         cameraMan.follow(player);
+
+        for (const entity of entityList) {
+            if (entity === player) {
+                entity.update(input, cameraMan);
+            } else {
+                entity.update(dt);
+            }
+        }
+
+        for (const entity of entityList) {
+            entity.detectCollision(entityList);
+        }
 
         const blockers = [
             ...visionBlockers,
@@ -107,8 +122,6 @@ function update() {
 
         // Draw characters
         entityList.forEach(e => {
-            e.update(input);
-            e.detectCollision(entityList); 
             e.draw(ctx, cameraMan);
         });
 
@@ -132,8 +145,11 @@ function update() {
 }
 
 // Själva gameloopen som körs t.ex. 60 gånger per sekund eller via requestAnimationFrame
-function gameLoop() {
-    update();
+let previousTime = 0;
+function gameLoop(time) {
+    const dt = previousTime === 0 ? 0 : Math.min((time - previousTime) / 1000, 0.05);
+    previousTime = time;
+    update(dt);
     requestAnimationFrame(gameLoop);
 }
 
