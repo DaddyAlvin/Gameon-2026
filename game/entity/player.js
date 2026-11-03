@@ -130,15 +130,15 @@ draw(ctx) {
     ctx.translate(this.x, this.y);
 
     // Keep rotation matching your sprite
-    ctx.rotate(this.angle + Math.PI / 2);
+    ctx.rotate(this.angle + Math.PI / 2 + Math.PI); // Rotate to face the mouse, adjusted for sprite orientation
 
     // Laser shoots 180 deg opposite (forward from head instead of out the back)
     ctx.beginPath();
     ctx.strokeStyle = 'rgba(255, 0, 0, 0.4)'; 
     ctx.lineWidth = 1;
     ctx.setLineDash([6, 4]);                     
-    ctx.moveTo(0, -15);     // front tip of the head
-    ctx.lineTo(0, -800);    // project forward
+    ctx.moveTo(0, 15);     // front tip of the head
+    ctx.lineTo(0, 800);    // project forward
     ctx.stroke();
     ctx.setLineDash([]);                     
 
