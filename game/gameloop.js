@@ -1,3 +1,14 @@
+console.log("script laddat")
+
+let state = "menu";
+
+function changeState(newState) {
+    state = newState;
+}
+
+
+changeState("playing");
+console.log(state); // Borde skriva ut "playing" i konsolen
 //working gameloop for player testing replace maybe idk
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');

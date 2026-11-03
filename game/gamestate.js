@@ -1,7 +1,0 @@
-console.log("script laddat")
-
-let state = "menu";
-
-function changeState(newState) {
-    state = newState;
-}
