@@ -42,6 +42,12 @@ function update() {
         // Här körs själva spelets logik (t.ex. flytta gubbar, rita ut spelplanen etc.)
         console.log("Spelet har börjat!");
     }
+    else if (state === "gameover") {
+        // Här kan du ha logik för game over-skärmen om det behövs
+    }
+    else if (state === "paused") {
+        // Här kan du ha logik för paus-skärmen om det behövs
+    }
 }
 
 // Själva gameloopen som körs t.ex. 60 gånger per sekund eller via requestAnimationFrame
